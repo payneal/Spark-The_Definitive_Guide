@@ -24,11 +24,15 @@
     * perform the simple task of creating a range of numbers. This range of numbers is just like a named column in a spreadsheet:
         * scala
     ```scala
-    val myRange = spark.range(1000).toDF('number')
+        
+        val myRange = spark.range(1000).toDF('number')
+    
     ```
         * python
-    ``` python 
-    myRange = spark.range(1000).toDF("number")
+    ```python 
+    
+        myRange = spark.range(1000).toDF("number")
+    
     ```
     * created a DataFrame with one column containing 1,000 rows with values from 0 to 999.
     * DataFrame is the most common Structured API and simply represents a table of data with rows and columns. The list that defines the columns and the types within those columns is called the schema. You can think of a DataFrame as a spreadsheet with named columns
@@ -54,10 +58,75 @@
     ```
 
     * 2 type of transformations: thoes that  specify narrow dependiencies, and thoes that specify wide dependencies 
+ 
+        * narrow dependencies
+            * are those for which each input partition will contribute to only one output partition
 
+        * wide dependencies
+            * style transformation will have input partitions contributing to many output partitions. You will often hear this referred to as a shuffle whereby Spark will exchange partitions across the cluster. With narrow transformations, Spark will automatically perform an operation called pipelining, meaning that if we specify multiple filters on DataFrames, they’ll all be performed in-memory. The same cannot be said for shuffles. When we perform a shuffle
     
+    * transformations are simply ways of specifying different series of data manipulation. This leads us to a topic called lazy evaluation.
 
+* Lazy evaluation
+    * Lazy evaulation means that Spark will wait until the very last moment to execute the graph of computation instructions
 
+    * In Spark, instead of modifying the data immediately when you express some operation, you build up a plan of transformations that you would like to apply to your source data. By waiting until the last minute to execute the code, Spark compiles this plan from your raw DataFrame transformations to a streamlined physical plan that will run as efficiently as possible across the cluster
+    * provides immense benefits because Spark can optimize the entire data flow from end to end
 
+    * an example of this is something called predicate pushdown on DataFrames. If we build a large Spark job but specify a filter at the end that only requires us to fetch one row from our source data, the most efficient way to execute this is to access the single record that we need. Spark will actually optimize this for us by pushing the filter down automatically.
+
+* Actions
+    * transformations allow us to build up our logical transformation plan. 
+    * to trigger the coputation, we  run an action. and an action  instructs Spark to computate a result from a series of transformations. The simmplist action is  cout
+    ```python
+        divisBy2.count()
+    ```
+    
+    * the output should be 500 continuing with our example
+    * 3 kinds of actions:
+        * actions to view data 
+        * actions to collect data to native objects in the respective langague
+        *  actions to write to output data sources
+
+* End to End Example
+    * sort does not modify the DataFrame. We use sort as a transformation that returns a new DataFrame by transforming the previous DataFrame
+
+    *  python
+    ```python
+        
+        from pyspark import SparkConf
+        from pyspark.sql import SparkSession
+        
+        conf = SparkConf()
+        spark = SparkSession.builder.config().getOrCreate()
+
+        flightData2015 = spark.read.option("inferSchema", "true")
+            .option("header", "true")\
+            .csv("./data/2015-summary.csv")
+
+        flightData2015.sort('count').explain()
+    
+        # example of info
+        
+      	# == Physical Plan == 
+		# *Sort [count#195 ASC NULLS FIRST], true, 0
+		# +- Exchange rangepartitioning(count#195 ASC NULLS FIRST, 200)   
+		# 	+- *FileScan csv [DEST_COUNTRY_NAME#193,ORIGIN_COUNTRY_NAME#194,count#195] ...  
+
+    ```
+	
+	* You can read explain plans from top to bottom, the top being the end result, and the bottom being the source(s) of data. In this case, take a look at the first keywords. You will see sort, exchange, and FileScan. That’s because the sort of our data is actually a wide transformation because rows will need to be compared with one another. Don’t worry too much about understanding everything about explain plans at this point, they can just be helpful tools for debugging and improving your knowledge as you progress with Spark.
+
+    * By default, when we perform a shuffle, Spark outputs 200 shuffle partitions. Let’s set this value to 5 to reduce the number of the output partitions from the shuffle:
+    * how to set conf settings on spark
+    ```python
+    
+        conf = SparkConf() 
+        conf.set("spark.sql.shuffle.partitions", "5")
+
+    ```
+    
+	
+* DataFrames and SQL
 
 

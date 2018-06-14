@@ -125,8 +125,18 @@
         conf.set("spark.sql.shuffle.partitions", "5")
 
     ```
-    
+    *  you can change this to help control the physical execution characteristics of your Spark jobs. Go ahead and experiment with different values and see the number of partitions yourself. In experimenting with different values, you should see drastically different runtimes.
 	
 * DataFrames and SQL
-
-
+    
+    * make any dataframe into a table or view with one simple method call:
+    ```python
+        flightData2015.createOrReplaceTempView("flight_data_2015")
+    ```
+    * once you do that spark.sql("select * from flight_data_2015") will work
+    
+    * discussed: groupBy, sum, sort, renameColumn, limit
+        * groupBy =  we’re going to be grouping by a key (or set of keys) and that now we’re going to perform an aggregation over each one of those keys.
+        * sum aggregation method. This takes as input a column expression or, simply, a column name. The result of the sum method call is a new DataFrame. You’ll see that it has a new schema but that it does know the type of each column
+        * withColumnRenamed method that takes two arguments, the original column name and the new column name. Of course, this doesn’t perform computation: this is just another transformation!
+        * limit statement as well as the orderBy (in the first line). You can also see how our aggregation happens in two phases, in the partial_sum calls. This is because summing a list of numbers is commutative, and Spark can perform the sum, partition by partition. Of course we can see how we read in the DataFrame

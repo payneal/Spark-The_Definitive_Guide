@@ -57,6 +57,30 @@
         staticSchema = staticDataFrame.schema
     ```
 
+    * take a look at the sale hours during which a given customer (identified by CustomerId) makes a large purchase. For example, let’s add a total cost column and see on what days a customer spent the most.The window function will include all data from each day in the aggregation. It’s simply a window over the time–series column in our data. This is a helpful tool for manipulating date and timestamps because we can specify our requirements in a more human form (via intervals), and Spark will group all of them together for us:
+
+    ```python
+        
+        from pyspark.sql.functions import window, column, desc, col
+        staticDataFrame.selectExpr("CustomerId", "(UnitPrice * Quantity) as total_cost", "InvoiceDate")
+            .groupBy(col(
+                "CustomerId"), window(col("InvoiceDate"), "1 day"))
+            .sum("total_cost").show(5)
+    ```
+    
+    * take a look at streaming code:
+    * very similar to reading static data only change is using readStream instead of read
+    * see below for stream and above for static
+    * additionally you’ll notice the maxFilesPerTrigger option, which simply specifies the number of files we should read in at once. This is to make our demonstration more “streaming,” and in a production scenario this would probably be omitted.
+
+    ```python
+        streamingDataFrame = spark.readStream.schema(staticSchema)\   
+            .option("maxFilesPerTrigger", 1).format("csv").option("header", "true")\
+            .load("/data/retail-data/by-day/*.csv")
+    ```
+
+    
+
 
 
 

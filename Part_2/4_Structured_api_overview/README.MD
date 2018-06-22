@@ -47,6 +47,34 @@
         ```
 
     * Spark Types
+        ```python
+            from pyspark.sql.types import *
+            b = ByteType()
+        ```
+    
+    ![SparkTypes](/./images/python_spark_types_1.PNG?raw=true "SparkTypes")
+    ![SparkTypes](/./images/python_spark_types_2.PNG?raw=true "SparkTypes")
+    ![SparkTypes](/./images/python_spark_types_3.PNG?raw=true "SparkTypes")
 
+    * you almost never work with purely static DataFrames. You will always manipulate and transform them.
+
+#  Overview of Structured API Execution
+* Walk through the execution of a single structured API query from user code to executed code. Here’s an overview of the steps:
+    1. Write DataFrame/Dataset/SQL Code.
+    2. If valid code, Spark converts this to a Logical Plan.
+    3. Spark transforms this Logical Plan to a Physical Plan, checking for optimizations along the way.
+    4. Spark then executes this Physical Plan (RDD manipulations) on the cluster.
+    
+    * To execute code, we must write code. This code is then submitted to Spark either through the console or via a submitted job. This code then passes through the Catalyst Optimizer, which decides how the code should be executed and lays out a plan for doing so before, finally, the code is run and the result is returned to the user
+
+    ![catalyst optimizer](/./images/catalyst_optimizer.PNG?raw=true "catalyst optimizer")
+    
+    * first phase of execution is meant to take user code and convert it into a logical plan
+    
+     ![local planning process](/./images/local_planning.PNG?raw=true "SparkTypes")
+   
+    * fter successfully creating an optimized logical plan, Spark then begins the physical planning process. The physical plan, often called a Spark plan, specifies how the logical plan will execute on the cluster by generating different physical execution strategies and comparing them through a cost model,
+
+   ![physical planning process](/./images/physical_planning.PNG?raw=true "SparkTypes")
 
 

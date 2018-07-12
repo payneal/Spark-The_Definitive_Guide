@@ -3,7 +3,6 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession, Row
 from pyspark.sql.functions import expr, col, column, lit, desc, asc
 from pyspark.sql.types import StructField, StructType, StringType, LongType
-import unittest
 
 class test_chapter_5(unittest.TestCase):
     

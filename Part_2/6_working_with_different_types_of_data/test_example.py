@@ -1,8 +1,9 @@
 # test
 import unittest 
+import math
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import lit, col, instr, expr
 
 
 class test_chapter_6(unittest.TestCase): 
@@ -23,9 +24,8 @@ class test_chapter_6(unittest.TestCase):
         self.spark.stop()
 
     def test_looking_at_lit_function(self):
-        self.df.printSchema()
+        # self.df.printSchema()
         self.df.createOrReplaceTempView("dfTable")
-        self.spark.sql("show tables").show()
         five_df = self.df.select(lit(5), lit("five"), lit(5.0)).first()
         self.assertEqual(five_df[0], 5 )
         self.assertEqual(five_df[1], "five")
@@ -37,15 +37,66 @@ class test_chapter_6(unittest.TestCase):
             .select("InvoiceNo", "Description").limit(5).collect()
      
         for x in info_df:
-            self.assertNotEqual(x['InvoiceNo'], 536365)
+            self.assertNotEqual(int(x['InvoiceNo']), 536365)
 
         info_df_1 = self.df.where("InvoiceNo = 536365").limit(5).collect()
-        print "df 1 = "
-        print info_df_1
 
-        info_df_2 = self.df.where("InvoiceNo <> 536365").limit(5).collect()
-        print "df 2 = "
-        print info_df_2
+        for x in info_df_1:
+            self.assertEqual(int(x['InvoiceNo']), 536365)
+
+        info_df_2 = self.df.where(
+                "InvoiceNo <> 536365").limit(100).collect()
+        for x in info_df_2:
+            self.assertGreaterEqual(int(x['InvoiceNo']), 536365)
+
+    def test_working_wit_filters(self):
+        priceFilter = col("UnitPrice") > 600 
+        descripFilter = instr(self.df.Description, "POSTAGE") >=1
+        df = self.df.where(self.df.StockCode.isin("DOT")).where(
+            priceFilter | descripFilter)
+        self.assertEqual(df.count(), 2)
+    
+    def test_or_statement_with_filter(self): 
+        price_filter = col('UnitPrice') > 600
+        descrip_filter = instr(self.df.Description, "POSTAGE") >= 1 
+        filtered_df = self.df.where(self.df.StockCode.isin("DOT")).where(
+            price_filter | descrip_filter)
+        self.assertEqual(2, filtered_df.count())
+
+    def test_booleans_on_columns(self):
+        DOT_code_filter = col("StockCode") == "DOT"
+        price_filter = col('UnitPrice') > 600
+        description_filter = instr(col("Description"), "POSTAGE") >= 1
+        new_df = self.df.withColumn(
+            "isExpensive", DOT_code_filter & (price_filter | description_filter))\
+            .where("isExpensive").select("unitPrice", "isExpensive").collect()
+        for x in new_df: 
+            self.assertEqual(x['isExpensive'], True)
+    
+    def test_using_expressions_with_filtering(self):
+        new_df = self.df.withColumn("isExpensive", expr("NOT UnitPrice <= 250"))\
+            .where("isExpensive")\
+            .select("Description", "UnitPrice").collect()
+        for x in new_df:
+            self.assertEqual(x['Description'], "DOTCOM POSTAGE")
+    
+
+    def test_working_with_numbers(self):
+	fabricatedQuantity = pow(col("Quantity") * col("UnitPrice"), 2) + 5
+	new_df = self.df.select(
+    	    expr("CustomerId"), 
+            fabricatedQuantity.alias("realQuantity"),
+            expr('Quantity'),
+            expr('UnitPrice')).collect()
+
+        for x in new_df:
+            self.assertEqual(
+                x['realQuantity'], 
+                math.pow(x['Quantity'] * x['UnitPrice'], 2) + 5) 
+    
+
+    
+
 
 
 if __name__ == "__main__":

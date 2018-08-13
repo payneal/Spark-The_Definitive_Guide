@@ -3,7 +3,7 @@ import unittest
 import math
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, instr, expr, round, bround, corr
+from pyspark.sql.functions import lit, col, instr, expr, round, bround
 
 
 class test_chapter_6(unittest.TestCase): 
@@ -115,34 +115,10 @@ class test_chapter_6(unittest.TestCase):
                 new_df[x]['realQuantity'])
 
     def test_round_in_pyspark(self):
-        df = self.df.select(
-            round(lit("2.5")), 
-            bround(lit("2.5"))).collect()
- 
+        df = self.df.select(round(lit("2.5")), bround(lit("2.5")).collect()
+        
         for x in df:
-            self.assertEqual(x['round(2.5, 0)'], 3.0)
-            self.assertEqual(x['bround(2.5, 0)'], 2.0)
-    
-    def test_correlation_in_spark(self):
-        self.df.stat.corr("Quantity","UnitPrice")
-        
-        # shows all data
-        # self.df.show()
-
-        umm = self.df.select(
-                corr("Quantity", "UnitPrice")
-            ).collect()[0]['corr(Quantity, UnitPrice)']
-        
-        #  negitive correlation
-        self.assertLess(umm, 0)
-
-    def test_compute_stats (self):
-        describe = self.df.describe()
-        print "what is this {}".format(describe["summary"])
-        print "what is this {}".format(dir(describe))
-        
-        for x in describe: 
-            print x['summary'] 
+            print "what is this: {}".format(x)
         
         self.assertEqual(True, False)
 

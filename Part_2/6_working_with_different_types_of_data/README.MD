@@ -64,9 +64,3 @@
         "(POWER((QUantity * UnitPrice), 2.0) + 5) as realQuantity").show(2)
 ```
 
-
-
-
-
-
-

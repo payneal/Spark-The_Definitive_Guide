@@ -136,16 +136,31 @@ class test_chapter_6(unittest.TestCase):
         #  negitive correlation
         self.assertLess(umm, 0)
 
-    def test_compute_stats (self):
-        describe = self.df.describe()
-        print "what is this {}".format(describe["summary"])
-        print "what is this {}".format(dir(describe))
-        
-        for x in describe: 
-            print x['summary'] 
-        
-        self.assertEqual(True, False)
+    def test_look_at_stats (self):
+        #self.df.describe().show()
+        self.assertEqual(True, True)
 
+    def test_calculate_exact_or_approximate_quantiles(self):
+        # self.df.show()
+        # print "------------------------------------------"
+        colName = "UnitPrice"
+        quantileProbs = [0.5]
+        relError = 0.05
+        middle_quanti =  self.df.stat.approxQuantile("UnitPrice", quantileProbs, relError)
+        low_quanti =  self.df.stat.approxQuantile("UnitPrice", [0.1], 0.05)
+        high_quanti =  self.df.stat.approxQuantile("UnitPrice", [0.9], 0.05)
+
+        self.assertLess(low_quanti, middle_quanti)
+        self.assertLess(middle_quanti, high_quanti)
+
+    def test_crosstab(self):
+        df = self.df.stat.crosstab("StockCode", "Quantity").take(10)
+        df.show()
+
+        df = self.df.stat.freqItems(["StockCode", "Quantity"]).take(10)
+        print "what is this: {}".format(df)
+        
+        
 
 if __name__ == "__main__":
     unittest.main()

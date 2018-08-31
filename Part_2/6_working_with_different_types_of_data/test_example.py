@@ -3,8 +3,7 @@ import unittest
 import math
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, instr, expr, round, bround, corr
-
+from pyspark.sql.functions import lit, col, instr, expr, round, bround, corr, monotonically_increasing_id, translate
 
 class test_chapter_6(unittest.TestCase): 
 
@@ -136,31 +135,54 @@ class test_chapter_6(unittest.TestCase):
         #  negitive correlation
         self.assertLess(umm, 0)
 
+
     def test_look_at_stats (self):
         #self.df.describe().show()
         self.assertEqual(True, True)
 
+
     def test_calculate_exact_or_approximate_quantiles(self):
-        # self.df.show()
-        # print "------------------------------------------"
         colName = "UnitPrice"
         quantileProbs = [0.5]
         relError = 0.05
-        middle_quanti =  self.df.stat.approxQuantile("UnitPrice", quantileProbs, relError)
-        low_quanti =  self.df.stat.approxQuantile("UnitPrice", [0.1], 0.05)
-        high_quanti =  self.df.stat.approxQuantile("UnitPrice", [0.9], 0.05)
-
+        middle_quanti =  self.df.stat.approxQuantile(
+            "UnitPrice", quantileProbs, relError)
+        low_quanti =  self.df.stat.approxQuantile(
+            "UnitPrice", [0.1], 0.05)
+        high_quanti =  self.df.stat.approxQuantile(
+            "UnitPrice", [0.9], 0.05)
         self.assertLess(low_quanti, middle_quanti)
         self.assertLess(middle_quanti, high_quanti)
 
-    def test_crosstab(self):
-        df = self.df.stat.crosstab("StockCode", "Quantity").take(10)
-        df.show()
 
-        df = self.df.stat.freqItems(["StockCode", "Quantity"]).take(10)
-        print "what is this: {}".format(df)
+    def test_crosstab(self):
+        df = self.df.stat.crosstab(
+            "StockCode", "Quantity").take(10)
+        
+        # print  "below is the df in a list"
+        # print df
+
+        df = self.df.stat.freqItems(
+            ["StockCode", "Quantity"]).take(10)
+        # print "what is this: {}".format(df)
+        # idk how to test this yet so keep trying
+        self.assertEqual(True, True)
+
+    def test_adding_monotoniucally_increasing_id(self):
         
         
+        df_with_increasing_id = self.df.select(
+            monotonically_increasing_id()).limit(5).collect()
+        count = 0
+
+        for x in df_with_increasing_id:
+            self.assertEqual(
+               x['monotonically_increasing_id()'], count)
+            count += 1
+    
+        
+    
+
 
 if __name__ == "__main__":
     unittest.main()
